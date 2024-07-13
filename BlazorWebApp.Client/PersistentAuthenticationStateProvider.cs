@@ -12,7 +12,7 @@ namespace BlazorWebApp.Client
     // This only provides a user name and email for display purposes. It does not actually include any tokens
     // that authenticate to the server when making subsequent requests. That works separately using a
     // cookie that will be included on HttpClient requests to the server.
-    internal class PersistentAuthenticationStateProvider : AuthenticationStateProvider
+    internal sealed class PersistentAuthenticationStateProvider : AuthenticationStateProvider
     {
         private static readonly Task<AuthenticationState> defaultUnauthenticatedTask =
             Task.FromResult(new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity())));
@@ -26,14 +26,7 @@ namespace BlazorWebApp.Client
                 return;
             }
 
-            Claim[] claims = [
-                new Claim(ClaimTypes.NameIdentifier, "UserId"),
-                new Claim(ClaimTypes.Name, "Email"),
-                new Claim(ClaimTypes.Email, "Email")];
-
-            authenticationStateTask = Task.FromResult(
-                new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity(claims,
-                    authenticationType: nameof(PersistentAuthenticationStateProvider)))));
+            authenticationStateTask = Task.FromResult(new AuthenticationState(userInfo.ToClaimsPrincipal()));
         }
 
         public override Task<AuthenticationState> GetAuthenticationStateAsync() => authenticationStateTask;

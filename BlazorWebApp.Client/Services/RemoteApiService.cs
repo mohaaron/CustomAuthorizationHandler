@@ -1,20 +1,14 @@
 using System.Text.Json;
-using Microsoft.AspNetCore.Components.Authorization;
 
 namespace BlazorWebApp.Client.Services;
 
 public class RemoteApiService
 {
     private readonly HttpClient _client;
-    private readonly AuthenticationStateProvider _authenticationStateProvider;
 
-    public RemoteApiService(
-        HttpClient client,
-        AuthenticationStateProvider authenticationStateProvider
-        )
+    public RemoteApiService(HttpClient client)
     {
         _client = client;
-        _authenticationStateProvider = authenticationStateProvider;
     }
 
     private record Claim(string type, object value);

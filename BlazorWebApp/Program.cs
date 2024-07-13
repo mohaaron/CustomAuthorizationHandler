@@ -1,6 +1,7 @@
 using BlazorWebApp;
 using BlazorWebApp.Client.Pages;
 using BlazorWebApp.Components;
+using Microsoft.AspNetCore.Authentication;
 using Serilog;
 using Serilog.Events;
 
@@ -26,12 +27,11 @@ try
 
     // Add services to the container.
     builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents()
-    .AddInteractiveWebAssemblyComponents();
+        .AddInteractiveServerComponents()
+        .AddInteractiveWebAssemblyComponents();
 
     var app = builder
-            .ConfigureServices()
-            .ConfigurePipeline();
+            .ConfigureAuthServices();
 
     // Configure the HTTP request pipeline.
     if (app.Environment.IsDevelopment())
@@ -52,17 +52,15 @@ try
     app.UseStaticFiles();
     app.UseAntiforgery();
 
-    app.UseRouting();
-
-    app.UseAuthentication();
-    app.UseAuthorization();
-
     app.MapDefaultControllerRoute();
 
     app.MapRazorComponents<App>()
         .AddInteractiveServerRenderMode()
         .AddInteractiveWebAssemblyRenderMode()
         .AddAdditionalAssemblies(typeof(Counter).Assembly);
+
+    app.MapGet("authentication/login", (string? returnUrl) => TypedResults.Challenge(GetAuthProperties(returnUrl)))
+            .AllowAnonymous();
 
     app.Run();
 }
@@ -74,4 +72,26 @@ finally
 {
     Log.Information("Shut down complete");
     Log.CloseAndFlush();
+}
+
+static AuthenticationProperties GetAuthProperties(string? returnUrl)
+{
+    // TODO: Use HttpContext.Request.PathBase instead.
+    const string pathBase = "/";
+
+    // Prevent open redirects.
+    if (string.IsNullOrEmpty(returnUrl))
+    {
+        returnUrl = pathBase;
+    }
+    else if (!Uri.IsWellFormedUriString(returnUrl, UriKind.Relative))
+    {
+        returnUrl = new Uri(returnUrl, UriKind.Absolute).PathAndQuery;
+    }
+    else if (returnUrl[0] != '/')
+    {
+        returnUrl = $"{pathBase}{returnUrl}";
+    }
+
+    return new AuthenticationProperties { RedirectUri = returnUrl };
 }

@@ -3,6 +3,8 @@
 <PageTitle>Remote API</PageTitle>
 
 @using BlazorWebApp.Client.Services
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
 @inject RemoteApiService Service
 
 <h1>Remote API</h1>
